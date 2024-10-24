@@ -1,6 +1,5 @@
 package com.company.companyapp.controller;
 
-import com.company.companyapp.DTO.ReviewRequest;
 import com.company.companyapp.model.Company;
 import com.company.companyapp.repository.CompanyRepository;
 import com.company.companyapp.service.CompanyService;
@@ -43,15 +42,14 @@ public class CompanyController {
     public ResponseEntity<String> sendOtp(@RequestBody Map<String, String> request) {
         String phoneNumber = request.get("phoneNumber");
 
-        // Hardcoded OTP (you can generate a dynamic one here if needed)
         String otp = "1234";
-
-        // Store the OTP with the corresponding phone number
+        otpStore.clear();
         otpStore.put(phoneNumber, otp);
 
         System.out.println("Company Service: Sending OTP " + otp + " to " + phoneNumber);
         return ResponseEntity.ok(otp);
     }
+
 
     @PostMapping("/validateOtp")
     public ResponseEntity<Boolean> validateOtp(@RequestBody Map<String, String> request) {
@@ -59,10 +57,10 @@ public class CompanyController {
         String otp = request.get("otp");
 
         // Retrieve the stored OTP for the given phone number
-        String storedOtp = otpStore.get(phoneNumber);
+        String storedOtp = otpStore.get(phoneNumber); // This gets the OTP that was sent
 
-        // Check if the stored OTP matches the provided OTP
-        if (storedOtp != null && storedOtp.equals(otp)) {
+        // Check if the stored OTP matches the provided OTP and the OTP is hardcoded
+        if (storedOtp != null && storedOtp.equals(otp) && otp.equals("1234")) {
             System.out.println("Company Service: OTP verification successful for " + phoneNumber);
             return ResponseEntity.ok(true);
         }
@@ -72,20 +70,22 @@ public class CompanyController {
     }
 
 
+
     @PostMapping("/receiveReview")
-    public ResponseEntity<String> receiveReview(@RequestBody ReviewRequest reviewRequest) {
-        String companyName = reviewRequest.getCompanyName();
-        String review = reviewRequest.getReview();
-        String reviewer = reviewRequest.getReviewer();
-        String phoneNumber = reviewRequest.getPhoneNumber();
+    public ResponseEntity<String> receiveReview(@RequestBody Map<String, String> reviewDetails) {
+        String companyName = reviewDetails.get("companyName");
+        String review = reviewDetails.get("review");
+        String reviewer = reviewDetails.get("reviewer");
+        String phoneNumber = reviewDetails.get("phoneNumber");
 
         // Log the received data
         System.out.println("Received company: " + companyName);
-        System.out.println("Received review: " + review);
+        System.out.println("Received feedback: " + review);
 
-        // Process the review and save it to the respective company
-        String result = addReviewOfCompany(companyName, review, reviewer, phoneNumber);
-        return ResponseEntity.ok(result);
+        String answer = addReviewOfCompany(companyName, review, reviewer, phoneNumber);
+        System.out.println(answer);
+
+        return ResponseEntity.ok(answer); // Return the response
     }
 
     private String addReviewOfCompany(String companyName, String feedback, String reviewer, String phoneNumber) {
@@ -94,14 +94,16 @@ public class CompanyController {
         if (optionalCompany.isPresent()) {
             Company company = optionalCompany.get();
 
-            // Create a new Review object and set its fields
-            Company.Review newReview = new Company.Review();
-            newReview.setReviewer(reviewer);
-            newReview.setPhoneNumber(phoneNumber);
-            newReview.setComment(feedback);
+            // Get the existing list of reviews
+            List<Company.Review> reviews = company.getReviews();
 
-            // Add the new review to the company's reviews list
-            company.getReviews().add(newReview);
+            Company.Review review = new Company.Review();
+            review.setReviewer(reviewer);
+            review.setPhoneNumber(phoneNumber);
+            review.setComment(feedback);
+
+            // Append the new review
+            reviews.add(review);
 
             // Save the updated company back to the database
             companyRepository.save(company);
@@ -112,6 +114,5 @@ public class CompanyController {
             return "Company not found!";
         }
     }
+
 }
-
-
