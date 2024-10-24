@@ -2,7 +2,6 @@ package com.company.companyapp.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.util.List;
 
 @Document(collection = "company")
 public class Company {
@@ -12,7 +11,6 @@ public class Company {
     private String name;
     private String description;
     private int followers;
-    private List<Review> reviews;
 
     // Getters and Setters
     public String getId() {
@@ -47,42 +45,5 @@ public class Company {
         this.followers = followers;
     }
 
-    public List<Review> getReviews() {
-        return reviews;
-    }
 
-    public void setReviews(List<Review> reviews) {
-        this.reviews = reviews;
-    }
-
-    public static class Review {
-        private String reviewer;
-        private String phoneNumber;
-        private String comment;
-
-        // Getters and Setters
-        public String getReviewer() {
-            return reviewer;
-        }
-
-        public void setReviewer(String reviewer) {
-            this.reviewer = reviewer;
-        }
-
-        public String getPhoneNumber() {
-            return phoneNumber;
-        }
-
-        public void setPhoneNumber(String phoneNumber) {
-            this.phoneNumber = phoneNumber;
-        }
-
-        public String getComment() {
-            return comment;
-        }
-
-        public void setComment(String comment) {
-            this.comment = comment;
-        }
-    }
 }

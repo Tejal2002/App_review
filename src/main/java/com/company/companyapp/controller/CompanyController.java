@@ -1,7 +1,9 @@
 package com.company.companyapp.controller;
 
 import com.company.companyapp.model.Company;
+import com.company.companyapp.model.Review;
 import com.company.companyapp.repository.CompanyRepository;
+import com.company.companyapp.repository.ReviewRepository;
 import com.company.companyapp.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -70,6 +72,8 @@ public class CompanyController {
     }
 
 
+    @Autowired
+    private ReviewRepository reviewRepository;
 
     @PostMapping("/receiveReview")
     public ResponseEntity<String> receiveReview(@RequestBody Map<String, String> reviewDetails) {
@@ -77,42 +81,27 @@ public class CompanyController {
         String review = reviewDetails.get("review");
         String reviewer = reviewDetails.get("reviewer");
         String phoneNumber = reviewDetails.get("phoneNumber");
+        int rating = Integer.parseInt(reviewDetails.get("rating"));
 
-        // Log the received data
-        System.out.println("Received company: " + companyName);
-        System.out.println("Received feedback: " + review);
-
-        String answer = addReviewOfCompany(companyName, review, reviewer, phoneNumber);
-        System.out.println(answer);
-
-        return ResponseEntity.ok(answer); // Return the response
-    }
-
-    private String addReviewOfCompany(String companyName, String feedback, String reviewer, String phoneNumber) {
         Optional<Company> optionalCompany = companyRepository.findByName(companyName);
-
         if (optionalCompany.isPresent()) {
             Company company = optionalCompany.get();
+            String companyId = company.getId();
 
-            // Get the existing list of reviews
-            List<Company.Review> reviews = company.getReviews();
+            // Create and save the review in the reviews collection
+            Review newReview = new Review(companyId, reviewer, phoneNumber, review, rating);
+            reviewRepository.save(newReview);
 
-            Company.Review review = new Company.Review();
-            review.setReviewer(reviewer);
-            review.setPhoneNumber(phoneNumber);
-            review.setComment(feedback);
-
-            // Append the new review
-            reviews.add(review);
-
-            // Save the updated company back to the database
-            companyRepository.save(company);
-
-            return "Review added successfully!";
+            return ResponseEntity.ok("Review added successfully!");
         } else {
-            // Company not found
-            return "Company not found!";
+            return ResponseEntity.badRequest().body("Company not found");
         }
     }
 
+    // New endpoint to get reviews by company
+    @GetMapping("/reviews/{companyId}")
+    public ResponseEntity<List<Review>> getReviewsByCompany(@PathVariable String companyId) {
+        List<Review> reviews = reviewRepository.findByCompanyId(companyId);
+        return ResponseEntity.ok(reviews);
+    }
 }

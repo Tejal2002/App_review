@@ -53,33 +53,30 @@ public class UserController {
     }
 
 
-
     @PostMapping("/reviewCompany")
     public String reviewCompany(@RequestParam(value = "companyName") String companyName,
                                 @RequestParam(value = "review") String review,
                                 @RequestParam(value = "reviewer") String reviewer,
-                                @RequestParam(value = "phoneNumber") String phoneNumber) {
+                                @RequestParam(value = "phoneNumber") String phoneNumber,
+                                @RequestParam(value = "rating") int rating) {
 
-        // Create a Map to hold the review details
         Map<String, String> reviewDetails = new HashMap<>();
         reviewDetails.put("companyName", companyName);
         reviewDetails.put("review", review);
         reviewDetails.put("reviewer", reviewer);
         reviewDetails.put("phoneNumber", phoneNumber);
+        reviewDetails.put("rating", String.valueOf(rating));
 
-        // Create the HTTP request entity with the body (review details)
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(reviewDetails, headers);
 
-        // This is where RestTemplate is used to make the POST request
         ResponseEntity<String> response = restTemplate.exchange(
                 "http://localhost:8081/api/company/receiveReview",
                 HttpMethod.POST,
                 requestEntity,
                 String.class);
 
-        // Return the response from the Company Microservice
         return "User gave response: " + response.getBody();
     }
 
