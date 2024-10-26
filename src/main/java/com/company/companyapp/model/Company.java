@@ -11,8 +11,24 @@ public class Company {
     private String name;
     private String description;
     private int followers;
+    private double rating; // New field for storing average rating
 
-    // Getters and Setters
+    // Constructors, getters, and setters
+    public Company(String name, String description) {
+        this.name = name;
+        this.description = description;
+        this.rating = 0.0; // Initialize the rating to zero or appropriate default
+    }
+
+    // Getters and Setters for the rating field
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
     public String getId() {
         return id;
     }

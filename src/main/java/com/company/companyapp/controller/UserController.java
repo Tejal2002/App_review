@@ -60,6 +60,11 @@ public class UserController {
                                 @RequestParam(value = "phoneNumber") String phoneNumber,
                                 @RequestParam(value = "rating") int rating) {
 
+        // Validate rating
+        if (rating < 1 || rating > 5) {
+            return "Invalid rating. Please provide a rating between 1 and 5.";
+        }
+
         Map<String, String> reviewDetails = new HashMap<>();
         reviewDetails.put("companyName", companyName);
         reviewDetails.put("review", review);
@@ -79,6 +84,7 @@ public class UserController {
 
         return "User gave response: " + response.getBody();
     }
+
 
 
 }

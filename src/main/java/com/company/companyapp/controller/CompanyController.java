@@ -92,16 +92,59 @@ public class CompanyController {
             Review newReview = new Review(companyId, reviewer, phoneNumber, review, rating);
             reviewRepository.save(newReview);
 
+            // Update the company's average rating
+            updateCompanyRating(companyId);
+
             return ResponseEntity.ok("Review added successfully!");
         } else {
             return ResponseEntity.badRequest().body("Company not found");
         }
     }
 
-    // New endpoint to get reviews by company
-    @GetMapping("/reviews/{companyId}")
+    private void updateCompanyRating(String companyId) {
+        // Fetch all reviews for the company
+        List<Review> reviews = reviewRepository.findByCompanyId(companyId);
+
+        // Calculate the new average rating
+        double newAverageRating = reviews.stream()
+                .mapToInt(Review::getRating)
+                .average()
+                .orElse(0.0);
+
+        // Fetch the company and update its rating
+        Company company = companyRepository.findById(companyId).orElseThrow();
+        company.setRating(newAverageRating);
+
+        // Save the updated company
+        companyRepository.save(company);
+    }
+
+    @GetMapping("/{companyId}/reviews")
     public ResponseEntity<List<Review>> getReviewsByCompany(@PathVariable String companyId) {
         List<Review> reviews = reviewRepository.findByCompanyId(companyId);
-        return ResponseEntity.ok(reviews);
+
+        if (reviews.isEmpty()) {
+            return ResponseEntity.noContent().build(); // Return 204 No Content if no reviews found
+        }
+
+        return ResponseEntity.ok(reviews); // Return the list of reviews
     }
+
+//    @GetMapping("/{companyId}/average-rating")
+//    public ResponseEntity<Double> getAverageRatingByCompany(@PathVariable String companyId) {
+//        // Perform aggregation to calculate the average rating for the company
+//        List<Review> reviews = reviewRepository.findByCompanyId(companyId);
+//
+//        if (reviews.isEmpty()) {
+//            return ResponseEntity.noContent().build(); // Return 204 No Content if no reviews found
+//        }
+//
+//        // Calculate the average rating
+//        double averageRating = reviews.stream()
+//                .mapToInt(Review::getRating)  // Extract the ratings
+//                .average()                    // Calculate the average
+//                .orElse(0.0);                 // Default to 0.0 if no ratings
+//
+//        return ResponseEntity.ok(averageRating);
+//    }
 }

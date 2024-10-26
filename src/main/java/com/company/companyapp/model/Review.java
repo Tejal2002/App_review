@@ -8,25 +8,22 @@ public class Review {
 
     @Id
     private String id;
-    private String companyId;
+    private String companyId;  // Link to the company
     private String reviewer;
     private String phoneNumber;
-    private String review;
+    private String comment;
     private int rating;
 
-    // Default constructor
-    public Review() {}
-
-    // Constructor with parameters
-    public Review(String companyId, String reviewer, String phoneNumber, String review, int rating) {
+    // Constructor
+    public Review(String companyId, String reviewer, String phoneNumber, String comment, int rating) {
         this.companyId = companyId;
         this.reviewer = reviewer;
         this.phoneNumber = phoneNumber;
-        this.review = review;
+        this.comment = comment;
         this.rating = rating;
     }
 
-    // Getters and setters
+    // Getters and Setters
     public String getId() {
         return id;
     }
@@ -59,12 +56,12 @@ public class Review {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getReview() {
-        return review;
+    public String getComment() {
+        return comment;
     }
 
-    public void setReview(String review) {
-        this.review = review;
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     public int getRating() {
