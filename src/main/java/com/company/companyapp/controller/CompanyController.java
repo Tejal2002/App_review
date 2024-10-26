@@ -130,6 +130,19 @@ public class CompanyController {
         return ResponseEntity.ok(reviews); // Return the list of reviews
     }
 
+   @PostMapping("/addCompany")
+    public ResponseEntity<String> addCompany(@RequestBody Company companyDetails) {
+        // Check if a company with the same name already exists
+        Optional<Company> existingCompany = companyRepository.findByName(companyDetails.getName());
+        if (existingCompany.isPresent()) {
+            return ResponseEntity.badRequest().body("Company already exists!");
+        }
+
+        // Add new company to MongoDB
+        companyRepository.save(companyDetails);
+        return ResponseEntity.ok("Company added successfully!");
+    }
+
 //    @GetMapping("/{companyId}/average-rating")
 //    public ResponseEntity<Double> getAverageRatingByCompany(@PathVariable String companyId) {
 //        // Perform aggregation to calculate the average rating for the company
