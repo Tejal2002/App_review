@@ -5,15 +5,22 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
 public class User {
+
     @Id
     private String id;
     private String phoneNumber;
-    private String name;
-    private String email;
+    private String otp;
+    private boolean verified;
 
-
-    public User(String phoneNumber) {
+    // Constructor with phoneNumber and otp
+    public User(String phoneNumber, String otp) {
         this.phoneNumber = phoneNumber;
+        this.otp = otp;
+        this.verified = false;
+    }
+
+    // Default constructor
+    public User() {
     }
 
     // Getters and Setters
@@ -33,20 +40,29 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getName() {
-        return name;
+    public String getOtp() {
+        return otp;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setOtp(String otp) {
+        this.otp = otp;
     }
 
-    public String getEmail() {
-        return email;
+    public boolean isVerified() {
+        return verified;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", otp='" + otp + '\'' +
+                ", verified=" + verified +
+                '}';
     }
 }
-

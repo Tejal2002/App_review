@@ -4,11 +4,12 @@ import com.company.companyapp.model.User;
 import com.company.companyapp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
+import java.util.Random;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -16,62 +17,83 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
-    private final String companyServiceUrl = "http://localhost:8081/api/company/sendOtp";
+    private final String telegramBotToken = "7930091882:AAEhGpdhRqKjTVu4CLLKwK82PBnz2bt6NVQ";
+    private final String telegramChatId = "1326935618";
     private final String companyNamesUrl = "http://localhost:8081/api/company/allNames";
-    private final String companyValidationUrl = "http://localhost:8081/api/company/validateOtp";
+
+    private String lastVerifiedPhoneNumber = null; // Track the last verified user
 
     @Override
-    public String sendPhoneNumberToCompany(String phoneNumber) {
-        RestTemplate restTemplate = new RestTemplate();
+    public String generateAndSendOtp(String phoneNumber) {
+        try {
+            String otp = String.format("%04d", new Random().nextInt(10000));
 
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("phoneNumber", phoneNumber);
+            User user = userRepository.findByPhoneNumber(phoneNumber);
+            if (user != null) {
+                user.setOtp(otp);
+                user.setVerified(false); // Reset verification on new OTP request
+            } else {
+                user = new User(phoneNumber, otp);
+            }
+            userRepository.save(user);
 
-        // Call the company's /sendOtp endpoint to generate and receive the OTP
-        String otp = restTemplate.postForObject(companyServiceUrl, requestBody, String.class);
+            sendOtpToTelegram(phoneNumber, otp);
+            return otp;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate OTP", e);
+        }
+    }
 
-        System.out.println("User Service: Sent phone number to company, received OTP: " + otp);
+    private void sendOtpToTelegram(String phoneNumber, String otp) {
+        String message = "Your OTP for verification is: " + otp;
+        String url = "https://api.telegram.org/bot" + telegramBotToken + "/sendMessage?chat_id=" + telegramChatId + "&text=" + message;
 
-        // Return the OTP for further processing (for example, testing purposes)
-        return otp;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getForObject(url, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send OTP to Telegram", e);
+        }
     }
 
     @Override
     public boolean verifyOtp(String phoneNumber, String otp) {
-        RestTemplate restTemplate = new RestTemplate();
-
-        // Prepare the request body
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("phoneNumber", phoneNumber);
-        requestBody.put("otp", otp); // This will be the OTP entered by the user
-
-        // Call the company's /validateOtp endpoint to check if the OTP is correct
-        Boolean isValid = restTemplate.postForObject(companyValidationUrl, requestBody, Boolean.class);
-
-        System.out.println("User Service: OTP verification result: " + isValid);
-        return isValid != null && isValid;
-    }
-
-
-    @Override
-    public User getUserByPhoneNumber(String phoneNumber) {
-        return userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Optional<User> optionalUser = Optional.ofNullable(userRepository.findByPhoneNumber(phoneNumber));
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            // Check if the user is already verified
+            if (user.isVerified()) {
+                return false; // Already verified, do not allow re-verification
+            }
+            if (user.getOtp().equals(otp)) {
+                user.setVerified(true);
+                lastVerifiedPhoneNumber = phoneNumber; // Set the last verified phone number
+                userRepository.save(user);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public User updateUser(String phoneNumber, User userDetails) {
-        User user = getUserByPhoneNumber(phoneNumber);
-        user.setName(userDetails.getName());
-        user.setEmail(userDetails.getEmail());
-        return userRepository.save(user);
-    }
-
-    // New method to fetch all company names from Company Service
     public List<String> getCompanyNamesFromCompanyService() {
-        RestTemplate restTemplate = new RestTemplate();
-        // Fetch company names from company service
-        List<String> companyNames = restTemplate.getForObject(companyNamesUrl, List.class);
-        return companyNames;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            return restTemplate.getForObject(companyNamesUrl, List.class);
+        } catch (HttpStatusCodeException e) {
+            throw new RuntimeException("Failed to retrieve company names: " + e.getResponseBodyAsString(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching company names", e);
+        }
+    }
+
+    @Override
+    public boolean isUserVerified(String phoneNumber) {
+        User user = userRepository.findByPhoneNumber(phoneNumber);
+        return user != null && user.isVerified();
+    }
+
+    public String getLastVerifiedPhoneNumber() {
+        return lastVerifiedPhoneNumber;
     }
 }

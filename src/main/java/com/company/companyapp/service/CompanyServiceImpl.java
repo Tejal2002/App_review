@@ -16,11 +16,6 @@ public class CompanyServiceImpl implements CompanyService {
     @Autowired
     private CompanyRepository companyRepository; // Inject the repository
 
-    @Override
-    public String sendOtp(String phoneNumber) {
-        System.out.println("Company Service: OTP sent for phone number from impl " + phoneNumber);
-        return HARDCODED_OTP;
-    }
 
     // New method to fetch all company names
     public List<String> getAllCompanyNames() {

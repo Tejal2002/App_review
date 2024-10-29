@@ -1,10 +1,10 @@
 package com.company.companyapp.service;
 
-import com.company.companyapp.model.User;
+import java.util.List;
 
 public interface UserService {
-    String sendPhoneNumberToCompany(String phoneNumber);
+    String generateAndSendOtp(String phoneNumber);
     boolean verifyOtp(String phoneNumber, String otp);
-    User getUserByPhoneNumber(String phoneNumber);
-    User updateUser(String phoneNumber, User userDetails);
+    boolean isUserVerified(String phoneNumber); // New method to check user verification status
+    List<String> getCompanyNamesFromCompanyService(); // New method to fetch company names
 }
