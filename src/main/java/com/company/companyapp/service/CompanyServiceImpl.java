@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 @Service
 public class CompanyServiceImpl implements CompanyService {
 
-    private static final String HARDCODED_OTP = "1234";
 
     @Autowired
     private CompanyRepository companyRepository; // Inject the repository

@@ -26,13 +26,14 @@ public class CompanyController {
     @Autowired
     private ReviewRepository reviewRepository;
 
-    // New endpoint to fetch all company names
+    // Endpoint to fetch all company names
     @GetMapping("/allNames")
     public ResponseEntity<List<String>> getAllCompanyNames() {
-        List<String> companyNames = companyService.getAllCompanyNames(); // Call the service to get company names
+        List<String> companyNames = companyService.getAllCompanyNames();
         return ResponseEntity.ok(companyNames);
     }
 
+    // Endpoint to receive a review for a company
     @PostMapping("/receiveReview")
     public ResponseEntity<String> receiveReview(@RequestBody Map<String, String> reviewDetails) {
         String companyName = reviewDetails.get("companyName");
@@ -46,7 +47,7 @@ public class CompanyController {
             Company company = optionalCompany.get();
             String companyId = company.getId();
 
-            // Create and save the review in the reviews collection
+            // Create and save the review
             Review newReview = new Review(companyId, reviewer, phoneNumber, review, rating);
             reviewRepository.save(newReview);
 
@@ -60,20 +61,14 @@ public class CompanyController {
     }
 
     private void updateCompanyRating(String companyId) {
-        // Fetch all reviews for the company
         List<Review> reviews = reviewRepository.findByCompanyId(companyId);
-
-        // Calculate the new average rating
         double newAverageRating = reviews.stream()
                 .mapToInt(Review::getRating)
                 .average()
                 .orElse(0.0);
 
-        // Fetch the company and update its rating
         Company company = companyRepository.findById(companyId).orElseThrow();
         company.setRating(newAverageRating);
-
-        // Save the updated company
         companyRepository.save(company);
     }
 
@@ -82,21 +77,20 @@ public class CompanyController {
         List<Review> reviews = reviewRepository.findByCompanyId(companyId);
 
         if (reviews.isEmpty()) {
-            return ResponseEntity.noContent().build(); // Return 204 No Content if no reviews found
+            return ResponseEntity.noContent().build();
         }
 
-        return ResponseEntity.ok(reviews); // Return the list of reviews
+        return ResponseEntity.ok(reviews);
     }
 
+    // Modified addCompany endpoint to prevent duplicate companies
     @PostMapping("/addCompany")
     public ResponseEntity<String> addCompany(@RequestBody Company companyDetails) {
-        // Check if a company with the same name already exists
         Optional<Company> existingCompany = companyRepository.findByName(companyDetails.getName());
         if (existingCompany.isPresent()) {
             return ResponseEntity.badRequest().body("Company already exists!");
         }
 
-        // Add new company to MongoDB
         companyRepository.save(companyDetails);
         return ResponseEntity.ok("Company added successfully!");
     }

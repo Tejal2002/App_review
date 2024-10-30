@@ -17,8 +17,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
-    private final String telegramBotToken = "7930091882:AAEhGpdhRqKjTVu4CLLKwK82PBnz2bt6NVQ";
-    private final String telegramChatId = "1326935618";
+    private final String telegramBotToken = "token";
+    private final String telegramChatId = "chatId";
     private final String companyNamesUrl = "http://localhost:8081/api/company/allNames";
 
     private String lastVerifiedPhoneNumber = null; // Track the last verified user
